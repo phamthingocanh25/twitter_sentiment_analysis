@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  # Dịch vụ Backend
+  backend:
+    build: ./backend
+    container_name: brandpulse-backend
+    ports:
+      - "5000:5000"
+    volumes:
+      # Mount thư mục model để container có thể truy cập các file model
+      - ./backend/model:/app/model
+    env_file:
+      - .env
+    restart: always
+
+  # Dịch vụ Frontend
+  frontend:
+    build: ./frontend
+    container_name: brandpulse-frontend
+    ports:
+      - "3000:80" # Map port 3000 của máy host vào port 80 của Nginx trong container
+    depends_on:
+      - backend # Đảm bảo backend khởi động trước frontend
+    restart: always
+
+  # (Tùy chọn) Dịch vụ Twitter Worker
+  # Bỏ comment phần này nếu bạn đã implement worker.py
+  # twitter_worker:
+  #   build: ./backend
+  #   container_name: brandpulse-worker
+  #   command: python -u twitter_worker/worker.py
+  #   depends_on:
+  - backend
+  #   env_file:
+  #     - .env
+  #   restart: always

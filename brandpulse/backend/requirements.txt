@@ -1,0 +1,10 @@
+# Các thư viện Python cần thiết cho backend
+# Flask và các phần mở rộng
+Flask==2.2.3
+Flask-Cors==3.0.10
+gunicorn==20.1.0
+
+# Thư viện cho Machine Learning và xử lý dữ liệu
+nltk==3.8.1
+numpy
+scikit-learn
