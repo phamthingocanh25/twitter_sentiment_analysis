@@ -1,18 +1,16 @@
 version: '3.8'
 
 services:
-  # Dịch vụ Backend
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://backend:5000/analyze # <-- Sửa ở đây
   backend:
     build: ./backend
-    container_name: brandpulse-backend
     ports:
       - "5000:5000"
-    volumes:
-      # Mount thư mục model để container có thể truy cập các file model
-      - ./backend/model:/app/model
-    env_file:
-      - .env
-    restart: always
 
   # Dịch vụ Frontend
   frontend:

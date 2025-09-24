@@ -14,8 +14,14 @@ const ResultGauge = React.memo(({ result }) => {
     );
   }
 
-  const isPositive = result.sentiment === 'Tích cực';
-  const confidence = Math.round(result.probability * 100);
+  // SỬA LỖI: Đọc đúng thuộc tính sentiment từ API
+  const isPositive = result.tweets[0].sentiment === 'Positive';
+  
+  // SỬA LỖI: Lấy đúng phần trăm độ tin cậy
+  const confidence = Math.round(
+    isPositive ? result.positive_percentage : result.negative_percentage
+  );
+  
   const data = [{ name: 'Confidence', value: confidence }];
 
   // Cải tiến: Tự động lấy màu từ file CSS để đồng bộ
@@ -46,10 +52,8 @@ const ResultGauge = React.memo(({ result }) => {
             clockWise
             dataKey="value"
             cornerRadius={15}
-            // Đã cập nhật để dùng màu từ CSS
             fill={barColor}
           />
-          {/* 👇 Khối mã này giữ nguyên để đảm bảo kiểu dáng và font chữ không đổi */}
           <text
             x="50%"
             y="55%"
@@ -61,8 +65,9 @@ const ResultGauge = React.memo(({ result }) => {
           </text>
         </RadialBarChart>
       </ResponsiveContainer>
+      {/* Hiển thị nhãn Tích cực/Tiêu cực dựa trên biến isPositive */}
       <div className={`gauge-sentiment ${isPositive ? 'sentiment-positive' : 'sentiment-negative'}`}>
-        {result.sentiment}
+        {isPositive ? 'Tích cực' : 'Tiêu cực'}
       </div>
     </div>
   );

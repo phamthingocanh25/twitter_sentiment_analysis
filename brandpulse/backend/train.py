@@ -38,31 +38,51 @@ def gradientDescent(x, y, theta, alpha, num_iters):
         z = np.dot(x, theta)
         h = sigmoid(z)
 
-        # Tính toán gradient
-        gradient = (1/m) * np.dot(x.T, (h - y))
+        # Tính toán hàm mất mát (cost function)
+        # Thêm một giá trị rất nhỏ (epsilon) để tránh lỗi log(0)
+        epsilon = 1e-10
+        J = -1./m * (np.dot(y.T, np.log(h + epsilon)) + np.dot((1-y).T, np.log(1-h + epsilon)))
 
-        # Cập nhật trọng số theta
-        theta = theta - alpha * gradient
+        # Tính toán gradient
+        gradient = (1/m) * np.dot(x.T, (h-y))
         
-        # (Tùy chọn) In ra chi phí sau mỗi 100 lần lặp để theo dõi
-        if i % 100 == 0:
-            # Tính toán chi phí (cost function J)
-            J = -1./m * (np.dot(y.T, np.log(h)) + np.dot((1-y).T, np.log(1-h)))
-            print(f"Iteration {i}: Cost = {np.squeeze(J)}")
-            
+        # Cập nhật trọng số theta
+        theta = theta - (alpha * gradient)
+
+        # ===== BẮT ĐẦU THAY ĐỔI =====
+        # Thêm vào để debug và theo dõi quá trình huấn luyện
+        if (i % 100 == 0):
+            print(f"Iteration {i}, Cost: {np.squeeze(J)}")
+            # Kiểm tra nếu cost function trở thành NaN hoặc Inf
+            if np.isnan(J) or np.isinf(J):
+                print("Lỗi: Hàm mất mát (Cost function) đã bị NaN hoặc Inf!")
+                print("Thử giảm learning_rate hoặc kiểm tra lại dữ liệu đầu vào.")
+                break
+        # ===== KẾT THÚC THAY ĐỔI =====
+
     return theta
 
-# --- PHẦN CHÍNH: CHUẨN BỊ DỮ LIỆU, HUẤN LUYỆN VÀ LƯU MODEL ---
-
-if __name__ == "__main__":
-    # 1. Tải và chuẩn bị dữ liệu
-    print("Step 1: Loading and preparing data...")
+if __name__ == '__main__':
+    # Tải bộ dữ liệu mẫu từ NLTK
+    nltk.download('twitter_samples')
+    
+    # 1. Chuẩn bị dữ liệu
+    print("Step 1: Preparing data...")
     all_positive_tweets = twitter_samples.strings('positive_tweets.json')
     all_negative_tweets = twitter_samples.strings('negative_tweets.json')
 
-    train_pos = all_positive_tweets[:4000]
-    train_neg = all_negative_tweets[:4000]
+    # Chia dữ liệu: 80% cho tập huấn luyện, 20% cho tập kiểm tra
+    split_ratio = 0.8
+    split_pos = int(len(all_positive_tweets) * split_ratio)
+    split_neg = int(len(all_negative_tweets) * split_ratio)
+
+    train_pos = all_positive_tweets[:split_pos]
+    train_neg = all_negative_tweets[:split_neg]
+    
+    # Kết hợp các tweet tích cực và tiêu cực
     train_x = train_pos + train_neg
+    
+    # Tạo nhãn: 1 cho tích cực, 0 cho tiêu cực
     train_y = np.append(np.ones((len(train_pos), 1)), np.zeros((len(train_neg), 1)), axis=0)
 
     # 2. Xây dựng từ điển tần suất
@@ -96,11 +116,9 @@ if __name__ == "__main__":
     # Lưu từ điển tần suất
     with open('model/freqs_colab.pkl', 'wb') as f:
         pickle.dump(freqs, f)
-    print(" - Frequency dictionary saved to model/freqs_colab.pkl")
-
-    # Lưu trọng số đã huấn luyện (chính là w6)
+    
+    # Lưu trọng số đã huấn luyện
     with open('model/w6.pkl', 'wb') as f:
         pickle.dump(trained_theta, f)
-    print(" - Trained weights saved to model/w6.pkl")
-
-    print("\nTraining process finished successfully! ✨")
+        
+    print("Artifacts saved successfully to 'model/' directory.")

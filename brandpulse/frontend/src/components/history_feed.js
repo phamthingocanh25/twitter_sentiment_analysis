@@ -9,19 +9,31 @@ const HistoryFeed = React.memo(({ history }) => {
         {history.length === 0 ? (
           <p>Chưa có phân tích nào.</p>
         ) : (
-          history.map((item, index) => (
-            <div
-              key={index}
-              className={`history-item ${
-                item.result.sentiment === 'Tích cực'
-                  ? 'history-item-positive'
-                  : 'history-item-negative'
-              }`}
-            >
-              <p>"{item.tweet}"</p>
-              <span>{`Độ tin cậy: ${(item.result.probability * 100).toFixed(1)}%`}</span>
-            </div>
-          ))
+          history.map((item, index) => {
+            // SỬA LỖI: Khai báo biến isPositive ở đây
+            const isPositive = item.result.tweets[0].sentiment === 'Positive';
+
+            // Lấy ra phần trăm tương ứng
+            const confidence = isPositive 
+              ? item.result.positive_percentage 
+              : item.result.negative_percentage;
+
+            // Xác định class CSS dựa trên kết quả
+            const sentimentClass = isPositive 
+              ? 'history-item-positive' 
+              : 'history-item-negative';
+
+            return (
+              <div
+                key={index}
+                className={`history-item ${sentimentClass}`}
+              >
+                <p>"{item.tweet}"</p>
+                {/* Sử dụng biến confidence đã được tính toán */}
+                <span>{`Độ tin cậy: ${confidence.toFixed(1)}%`}</span>
+              </div>
+            );
+          })
         )}
       </div>
     </div>

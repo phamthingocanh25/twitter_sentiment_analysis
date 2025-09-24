@@ -2,8 +2,9 @@ import React from 'react';
 
 // TỐI ƯU: Bọc component trong React.memo
 const MetricsPanel = React.memo(({ history }) => {
-  const positiveCount = history.filter(item => item.result.sentiment === 'Tích cực').length;
-  const negativeCount = history.filter(item => item.result.sentiment === 'Tiêu cực').length;
+  // SỬA LỖI: Cập nhật logic lọc để khớp với cấu trúc dữ liệu đúng từ API
+  const positiveCount = history.filter(item => item.result.tweets[0].sentiment === 'Positive').length;
+  const negativeCount = history.filter(item => item.result.tweets[0].sentiment === 'Negative').length;
 
   return (
     <div className="panel metrics-panel">
