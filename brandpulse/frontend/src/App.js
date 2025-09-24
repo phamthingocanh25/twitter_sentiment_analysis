@@ -38,7 +38,7 @@ function App() {
         <div className="start-content">
           <img src="/assets/logo.png" alt="Logo" className="app-logo" />
           <h1>Phân tích cảm xúc Tweet</h1>
-          <p>Nhấn vào bất kỳ đâu để bắt đầu!</p>
+          <p>Hãy cùng Team "Mai Làm" bắt đầu phân tích nhé! </p>
         </div>
       </div>
     );

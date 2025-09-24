@@ -1,36 +1,45 @@
+// frontend/src/components/history_feed.js
 import React from 'react';
 
-// TỐI ƯU: Bọc component trong React.memo
-const HistoryFeed = React.memo(({ history }) => {
+const HistoryFeed = React.memo(({ history, onItemSelect }) => {
+  // --- THÊM MỚI: Tạo map để dịch sang tiếng Việt ---
+  const sentimentDisplayMap = {
+    'Positive': 'Tích cực',
+    'Negative': 'Tiêu cực',
+    'Mixed': 'Tổng hợp'
+  };
+
   return (
     <div className="panel history-feed-panel">
       <h2 className="panel-title">Lịch sử Phân tích</h2>
       <div className="history-feed">
         {history.length === 0 ? (
-          <p>Chưa có phân tích nào.</p>
+          <p className="placeholder-text">Chưa có phân tích nào.</p>
         ) : (
           history.map((item, index) => {
-            // SỬA LỖI: Khai báo biến isPositive ở đây
-            const isPositive = item.result.tweets[0].sentiment === 'Positive';
+            const { overall_sentiment, positive_percentage } = item.result;
 
-            // Lấy ra phần trăm tương ứng
-            const confidence = isPositive 
-              ? item.result.positive_percentage 
-              : item.result.negative_percentage;
+            // Lấy text tiếng Việt từ map
+            const displayText = sentimentDisplayMap[overall_sentiment] || overall_sentiment;
 
-            // Xác định class CSS dựa trên kết quả
-            const sentimentClass = isPositive 
-              ? 'history-item-positive' 
-              : 'history-item-negative';
+            const sentimentClass = {
+              'Positive': 'history-item-positive',
+              'Negative': 'history-item-negative',
+              'Mixed': 'history-item-mixed'
+            }[overall_sentiment];
 
             return (
               <div
                 key={index}
                 className={`history-item ${sentimentClass}`}
+                onClick={() => onItemSelect(item)}
+                title="Nhấp để xem chi tiết"
               >
                 <p>"{item.tweet}"</p>
-                {/* Sử dụng biến confidence đã được tính toán */}
-                <span>{`Độ tin cậy: ${confidence.toFixed(1)}%`}</span>
+                <span>
+                  {/* --- THAY ĐỔI: Sử dụng displayText thay cho overall_sentiment --- */}
+                  {displayText} ({positive_percentage.toFixed(1)}% Tích cực)
+                </span>
               </div>
             );
           })

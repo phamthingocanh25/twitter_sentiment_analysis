@@ -1,56 +1,68 @@
+# backend/app.py
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pickle
-import numpy as np
-# Import các hàm cần thiết từ file utils
-from model.utils import predict_single_tweet
+from model.utils import predict_single_tweet # Đảm bảo import đúng
+import os
+from model.utils import predict_single_tweet, get_word_sentiments
 
+# Khởi tạo ứng dụng Flask
 app = Flask(__name__)
-CORS(app)
+CORS(app)  # Bật CORS cho tất cả các route
 
-# Load the frequency dictionary and the model weights
-with open('model/freqs_colab.pkl', 'rb') as f:
+# Xác định đường dẫn đến các tệp model
+base_dir = os.path.dirname(os.path.abspath(__file__))
+freqs_path = os.path.join(base_dir, 'model/freqs_colab.pkl')
+w_path = os.path.join(base_dir, 'model/w6.pkl') # Tên file model không đổi
+
+# Tải các tệp model
+with open(freqs_path, 'rb') as f:
     freqs = pickle.load(f)
 
-with open('model/w6.pkl', 'rb') as f:
-    w6 = pickle.load(f)
+with open(w_path, 'rb') as f:
+    w = pickle.load(f) # Tải trọng số đã được huấn luyện lại
 
+# Định nghĩa route cho API
 @app.route('/analyze', methods=['POST'])
 def analyze():
     data = request.json
-    tweet_text = data.get('tweet') 
+    if not data:
+        return jsonify({"error": "Invalid JSON provided"}), 400
 
+    tweet_text = data.get('tweet')
     if not tweet_text:
-        return jsonify({"error": "No text provided"}), 400
+        return jsonify({"error": "No 'tweet' key provided in JSON"}), 400
 
-    prob_positive_raw = predict_single_tweet(tweet_text, freqs, w6)
+    # 1. Lấy kết quả dự đoán cốt lõi (không thay đổi)
+    sentiment, prob_positive = predict_single_tweet(tweet_text, freqs, w)
 
-    # Kiểm tra và lấy giá trị một cách an toàn
-    if isinstance(prob_positive_raw, (list, np.ndarray)):
-       if isinstance(prob_positive_raw[0], (list, np.ndarray)):
-           prob_positive = prob_positive_raw[0][0]
-       else:
-           prob_positive = prob_positive_raw[0]
-    else:
-       prob_positive = prob_positive_raw
-    
-    # SỬA LỖI: Di chuyển phép tính này ra ngoài để nó luôn được thực thi
-    prob_negative = 1 - prob_positive
+    # 2. Thêm logic cho trạng thái "Mixed"
+    final_sentiment = sentiment
+    # Nếu xác suất rất gần 50% (ví dụ: trong khoảng 40-60%), ta coi là "Mixed"
+    if 0.4 < prob_positive < 0.6:
+        final_sentiment = "Mixed"
 
-    sentiment = "Positive" if prob_positive > 0.5 else "Negative"
+    # 3. Lấy thông tin highlight từ khóa
+    word_sentiments = get_word_sentiments(tweet_text, freqs)
 
+    # 4. Tính toán các giá trị phần trăm
+    positive_percentage = prob_positive * 100
+    negative_percentage = (1 - prob_positive) * 100
+
+    # 5. Tạo response MỚI với cấu trúc dữ liệu phong phú hơn
     response_data = {
-        "positive_percentage": round(float(prob_positive) * 100, 2),
-        "negative_percentage": round(float(prob_negative) * 100, 2),
-        "neutral_percentage": 0,
-        "tweets": [
-            {
-                "text": tweet_text,
-                "sentiment": sentiment
-            }
-        ]
+        'original_text': tweet_text,
+        'overall_sentiment': final_sentiment, # 'Positive', 'Negative', hoặc 'Mixed'
+        'positive_percentage': positive_percentage,
+        'negative_percentage': negative_percentage,
+        'highlighted_text': word_sentiments # Dữ liệu cho việc highlight
     }
+    
+    # (Tùy chọn - Bước tiếp theo) Ở đây bạn sẽ thêm code để lưu response_data vào database
 
     return jsonify(response_data)
+
+# Chạy ứng dụng
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(debug=True, host='0.0.0.0')
