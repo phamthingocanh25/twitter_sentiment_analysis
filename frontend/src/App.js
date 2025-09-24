@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect, Suspense, lazy } from 'react';
 import './App.css';
 
+// 1. IMPORT CÁC FILE ASSET TRỰC TIẾP VÀO CODE
+import logo from './assets/logo.png'; 
+import backgroundMusic from './assets/music.mp3';
+
 // TỐI ƯU: Sử dụng React.lazy để tải Dashboard component khi cần thiết.
-// Thao tác này sẽ chỉ bắt đầu sau khi người dùng tương tác với màn hình chờ.
 const Dashboard = lazy(() => import('./Dashboard'));
 
 function App() {
@@ -36,7 +39,8 @@ function App() {
     return (
       <div className="start-screen" onClick={handleStartInteraction}>
         <div className="start-content">
-          <img src="/assets/logo.png" alt="Logo" className="app-logo" />
+          {/* 2. SỬ DỤNG BIẾN 'logo' ĐÃ IMPORT */}
+          <img src={logo} alt="Logo" className="app-logo" />
           <h1>Phân tích cảm xúc Tweet</h1>
           <p>Hãy cùng Team "Mai Làm" bắt đầu phân tích nhé! </p>
         </div>
@@ -49,20 +53,22 @@ function App() {
     <div className="App">
       <audio
         ref={audioRef}
-        src="/assets/music.mp3"
+        // 3. SỬ DỤNG BIẾN 'backgroundMusic' ĐÃ IMPORT
+        src={backgroundMusic}
         loop
       />
       
       <header className="app-header">
-        <img src="/assets/logo.png" alt="BrandPulse Logo" className="app-logo" />
+        {/* 4. SỬ DỤNG LẠI BIẾN 'logo' */}
+        <img src={logo} alt="BrandPulse Logo" className="app-logo" />
         <h1>Phân tích cảm xúc Tweet</h1>
       </header>
       <main>
         {/*
           TỐI ƯU: Bọc Dashboard trong Suspense.
-          Nó sẽ hiển thị một thông báo fallback trong khi đợi tệp Dashboard.js và các component con của nó được tải về.
+          Nó sẽ hiển thị một thông báo fallback trong khi đợi tải component Dashboard.
         */}
-        <Suspense fallback={<div className="loading-dashboard">Đang tải giao diện...</div>}>
+        <Suspense fallback={<div className="loading-fallback">Đang tải dashboard...</div>}>
           <Dashboard />
         </Suspense>
       </main>
