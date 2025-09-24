@@ -1,58 +1,75 @@
+# Nội dung file: brandpulse/backend/app.py
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pickle
 import numpy as np
-# THÊM LẠI DÒNG IMPORT STANDARDSCALER
-from sklearn.preprocessing import StandardScaler
-from model.feature_engineering import extract_features
-from model.utils import sigmoid
+from model.utils import process_tweet # Sử dụng hàm tiền xử lý đã được đồng bộ
 
 app = Flask(__name__)
 CORS(app)
 
-# Tải frequency dictionary, model và scaler
-with open('model/freqs.pkl', 'rb') as f:
-    freqs = pickle.load(f)
+# --- LOAD MÔ HÌNH VÀ TỪ ĐIỂN MỚI ---
+try:
+    with open("model/w6.pkl", "rb") as f:
+        w6 = pickle.load(f)
+    with open("model/freqs_colab.pkl", "rb") as f:
+        freqs = pickle.load(f)
+except FileNotFoundError:
+    print("Lỗi: Không tìm thấy file w6.pkl hoặc freqs_colab.pkl.")
+    print("Vui lòng chạy 'python train.py' trong thư mục backend trước khi khởi động app.")
+    w6, freqs = None, None
 
-with open('model/model.pkl', 'rb') as f:
-    theta = pickle.load(f)
 
-# KHÔI PHỤC VIỆC TẢI SCALER
-with open('model/scaler.pkl', 'rb') as f:
-    scaler = pickle.load(f)
+# --- CÁC HÀM LOGIC CỦA MÔ HÌNH 6 FEATURES ---
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
 
-def predict_tweet(tweet):
-    # Trích xuất đặc trưng
-    x = extract_features(tweet, freqs)
+def extract_features6(tweet, freqs):
+    word_l = process_tweet(tweet)
+    x = np.zeros((1, 6))
+    x[0, 0] = 1 # bias term
+    positive_emojis = [':)', ':-)', ':D', '=)', ':]', ':-]', ';)', ';-)', '^_^', '<3']
+    negative_emojis = [':(', ':-(', ':(', '=(', ':[', ':-[']
+    pos_count, neg_count, pos_emoji_count, neg_emoji_count = 0, 0, 0, 0
+    for word in word_l:
+        pos_count += freqs.get((word, 1.0), 0)
+        neg_count += freqs.get((word, 0.0), 0)
+    x[0, 3] = sum(1 for word in word_l if (word, 1.0) in freqs)
+    x[0, 4] = sum(1 for word in word_l if (word, 0.0) in freqs)
+    for emoji in positive_emojis:
+        pos_emoji_count += tweet.count(emoji)
+    for emoji in negative_emojis:
+        neg_emoji_count += tweet.count(emoji)
+    x[0, 5] = pos_emoji_count - neg_emoji_count
+    x[0, 1] = pos_count
+    x[0, 2] = neg_count
+    return x
 
-    # KHÔI PHỤC LẠI BƯỚC CHUẨN HÓA DỮ LIỆU
-    # Bỏ qua cột bias đầu tiên khi chuẩn hóa
-    x_scaled = x.copy()
-    x_scaled[:, 1:] = scaler.transform(x[:, 1:])
-
-    # Dự đoán bằng vector đặc trưng đã được chuẩn hóa (x_scaled)
-    y_pred = sigmoid(np.dot(x_scaled, theta))
-
-    return y_pred
-
-@app.route('/predict', methods=['POST'])
+# --- ENDPOINT API ---
+@app.route("/predict", methods=['POST'])
 def predict():
-    data = request.get_json()
-    tweet = data.get('tweet', '') # Thêm get để tránh lỗi nếu không có 'tweet'
-    if not tweet:
-        return jsonify({'error': 'No tweet provided'}), 400
-        
-    prediction = predict_tweet(tweet)
-    
-    # Đổi tên 'confidence' thành 'probability' để khớp với frontend
-    # Sửa lỗi logic hiển thị: nếu prediction > 0.5 là 'Tích cực', ngược lại là 'Tiêu cực'
-    sentiment = 'Tích cực' if prediction > 0.5 else 'Tiêu cực'
-    
-    # Trả về cả 'sentiment' và 'probability'
-    return jsonify({
-        'sentiment': sentiment,
-        'probability': float(prediction) # Đổi tên key ở đây
-    })
+    if w6 is None or freqs is None:
+        return jsonify({"error": "Model is not loaded. Please run the training script."}), 500
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    try:
+        data = request.get_json()
+        text_to_analyze = data['text']
+
+        # Sử dụng logic 6 features để dự đoán
+        features = extract_features6(text_to_analyze, freqs)
+        probability_raw = sigmoid(np.dot(features, w6))
+        
+        probability = probability_raw[0, 0]
+        sentiment = "Positive" if probability > 0.5 else "Negative"
+
+        return jsonify({
+            "text": text_to_analyze,
+            "sentiment": sentiment,
+            "probability": float(probability) # Chuyển sang kiểu float
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
