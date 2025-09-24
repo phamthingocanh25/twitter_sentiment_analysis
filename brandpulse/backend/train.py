@@ -1,33 +1,16 @@
-# Nội dung file: brandpulse/backend/train.py
+# backend/train.py
+
 import nltk
+import pickle
 import numpy as np
 from nltk.corpus import twitter_samples
-import re
-import string
-from nltk.corpus import stopwords
-from nltk.stem import PorterStemmer
-from nltk.tokenize import TweetTokenizer
-import pickle
 
-# --- CÁC HÀM TIỀN XỬ LÝ VÀ HUẤN LUYỆN TỪ COLAB ---
-
-def process_tweet(tweet):
-    stemmer = PorterStemmer()
-    stopwords_english = stopwords.words('english')
-    tweet = re.sub(r'\$\w*', '', tweet)
-    tweet = re.sub(r'^RT[\s]+', '', tweet)
-    tweet = re.sub(r'https://[^\s\n\r]+', '', tweet)
-    tweet = re.sub(r'#', '', tweet)
-    tokenizer = TweetTokenizer(preserve_case=False, strip_handles=True, reduce_len=True)
-    tweet_tokens = tokenizer.tokenize(tweet)
-    tweets_clean = []
-    for word in tweet_tokens:
-        if (word not in stopwords_english and word not in string.punctuation):
-            stem_word = stemmer.stem(word)
-            tweets_clean.append(stem_word)
-    return tweets_clean
+# Import các hàm cần thiết từ file utils
+# sigmoid được cần cho gradient descent
+from model.utils import process_tweet, extract_features6, sigmoid
 
 def build_freqs(tweets, ys):
+    """Xây dựng từ điển tần suất từ các tweet."""
     yslist = np.squeeze(ys).tolist()
     freqs = {}
     for y, tweet in zip(yslist, tweets):
@@ -36,77 +19,88 @@ def build_freqs(tweets, ys):
             freqs[pair] = freqs.get(pair, 0) + 1
     return freqs
 
-def sigmoid(z):
-    return 1 / (1 + np.exp(-z))
-
 def gradientDescent(x, y, theta, alpha, num_iters):
+    """
+    Hàm thực hiện Gradient Descent để tối ưu trọng số theta.
+
+    Input:
+        x: ma trận đặc trưng, kích thước (m, n).
+        y: vector nhãn thực tế, kích thước (m, 1).
+        theta: vector trọng số ban đầu, kích thước (n, 1).
+        alpha: tốc độ học (learning rate).
+        num_iters: số lần lặp.
+    Output:
+        theta: vector trọng số đã được tối ưu.
+    """
     m = x.shape[0]
     for i in range(0, num_iters):
+        # Tính toán dự đoán (hypothesis)
         z = np.dot(x, theta)
         h = sigmoid(z)
-        J = -1./m * (np.dot(y.transpose(), np.log(h)) + np.dot((1-y).transpose(), np.log(1-h)))
-        theta = theta - (alpha/m) * np.dot(x.transpose(), (h-y))
-    J = float(J)
-    return J, theta
 
-def extract_features6(tweet, freqs):
-    word_l = process_tweet(tweet)
-    x = np.zeros((1, 6))
-    x[0, 0] = 1 # bias term
-    positive_emojis = [':)', ':-)', ':D', '=)', ':]', ':-]', ';)', ';-)', '^_^', '<3']
-    negative_emojis = [':(', ':-(', ':(', '=(', ':[', ':-[']
-    pos_count, neg_count, pos_emoji_count, neg_emoji_count = 0, 0, 0, 0
-    for word in word_l:
-        pos_count += freqs.get((word, 1.0), 0)
-        neg_count += freqs.get((word, 0.0), 0)
-    x[0, 3] = sum(1 for word in word_l if (word, 1.0) in freqs)
-    x[0, 4] = sum(1 for word in word_l if (word, 0.0) in freqs)
-    for emoji in positive_emojis:
-        pos_emoji_count += tweet.count(emoji)
-    for emoji in negative_emojis:
-        neg_emoji_count += tweet.count(emoji)
-    x[0, 5] = pos_emoji_count - neg_emoji_count
-    x[0, 1] = pos_count
-    x[0, 2] = neg_count
-    return x
+        # Tính toán gradient
+        gradient = (1/m) * np.dot(x.T, (h - y))
 
-# --- QUÁ TRÌNH HUẤN LUYỆN CHÍNH ---
-if __name__ == '__main__':
-    print("Bắt đầu quá trình huấn luyện mô hình 6 features...")
-    
-    # Download NLTK data
-    nltk.download('twitter_samples')
-    nltk.download('stopwords')
+        # Cập nhật trọng số theta
+        theta = theta - alpha * gradient
+        
+        # (Tùy chọn) In ra chi phí sau mỗi 100 lần lặp để theo dõi
+        if i % 100 == 0:
+            # Tính toán chi phí (cost function J)
+            J = -1./m * (np.dot(y.T, np.log(h)) + np.dot((1-y).T, np.log(1-h)))
+            print(f"Iteration {i}: Cost = {np.squeeze(J)}")
+            
+    return theta
 
-    # Load data
+# --- PHẦN CHÍNH: CHUẨN BỊ DỮ LIỆU, HUẤN LUYỆN VÀ LƯU MODEL ---
+
+if __name__ == "__main__":
+    # 1. Tải và chuẩn bị dữ liệu
+    print("Step 1: Loading and preparing data...")
     all_positive_tweets = twitter_samples.strings('positive_tweets.json')
     all_negative_tweets = twitter_samples.strings('negative_tweets.json')
+
     train_pos = all_positive_tweets[:4000]
     train_neg = all_negative_tweets[:4000]
     train_x = train_pos + train_neg
     train_y = np.append(np.ones((len(train_pos), 1)), np.zeros((len(train_neg), 1)), axis=0)
 
-    print("Đã tải và chuẩn bị dữ liệu.")
-
-    # Tạo từ điển tần suất
+    # 2. Xây dựng từ điển tần suất
+    print("\nStep 2: Building frequency dictionary...")
     freqs = build_freqs(train_x, train_y)
-    print(f"Từ điển tần suất được tạo với {len(freqs)} mục.")
+    print(f"Frequency dictionary built. Total pairs: {len(freqs)}")
 
-    # Tạo ma trận đặc trưng X
+    # 3. Trích xuất đặc trưng
+    print("\nStep 3: Extracting features...")
     X = np.zeros((len(train_x), 6))
     for i in range(len(train_x)):
-        X[i, :] = extract_features6(train_x[i], freqs)
-
-    # Huấn luyện mô hình
+        X[i, :]= extract_features6(train_x[i], freqs)
     Y = train_y
-    J, w6 = gradientDescent(X, Y, np.zeros((6, 1)), 1e-9, 2000)
-    print(f"Huấn luyện hoàn tất. Chi phí cuối cùng (J) = {J:.8f}")
+    print("Features extracted.")
 
-    # Lưu các "sản phẩm" đã huấn luyện
-    with open('model/w6.pkl', 'wb') as f:
-        pickle.dump(w6, f)
+    # 4. Huấn luyện model bằng Gradient Descent
+    print("\nStep 4: Training the model with Gradient Descent...")
+    # Các siêu tham số (hyperparameters)
+    learning_rate = 1e-9
+    num_iterations = 1500
     
+    # Khởi tạo trọng số theta ban đầu
+    initial_theta = np.zeros((6, 1))
+
+    # Chạy Gradient Descent để học ra trọng số tối ưu
+    trained_theta = gradientDescent(X, Y, initial_theta, learning_rate, num_iterations)
+    print("Model training complete.")
+
+    # 5. Lưu các thành phần đã huấn luyện
+    print("\nStep 5: Saving model artifacts...")
+    # Lưu từ điển tần suất
     with open('model/freqs_colab.pkl', 'wb') as f:
         pickle.dump(freqs, f)
+    print(" - Frequency dictionary saved to model/freqs_colab.pkl")
 
-    print("Đã lưu thành công w6.pkl và freqs_colab.pkl vào thư mục brandpulse/backend/model/")
+    # Lưu trọng số đã huấn luyện (chính là w6)
+    with open('model/w6.pkl', 'wb') as f:
+        pickle.dump(trained_theta, f)
+    print(" - Trained weights saved to model/w6.pkl")
+
+    print("\nTraining process finished successfully! ✨")
