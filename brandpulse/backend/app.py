@@ -4,7 +4,7 @@ import pickle
 import numpy as np
 # THÊM LẠI DÒNG IMPORT STANDARDSCALER
 from sklearn.preprocessing import StandardScaler
-from model.feature_engineering import extract_features_6
+from model.feature_engineering import extract_features
 from model.utils import sigmoid
 
 app = Flask(__name__)
@@ -23,7 +23,7 @@ with open('model/scaler.pkl', 'rb') as f:
 
 def predict_tweet(tweet):
     # Trích xuất đặc trưng
-    x = extract_features_6(tweet, freqs)
+    x = extract_features(tweet, freqs)
 
     # KHÔI PHỤC LẠI BƯỚC CHUẨN HÓA DỮ LIỆU
     # Bỏ qua cột bias đầu tiên khi chuẩn hóa

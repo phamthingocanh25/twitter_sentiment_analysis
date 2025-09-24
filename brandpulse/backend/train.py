@@ -4,7 +4,7 @@ import numpy as np
 import pickle
 from sklearn.preprocessing import StandardScaler
 from model.utils import process_tweet # Đảm bảo import hàm này
-from model.feature_engineering import extract_features_6
+from model.feature_engineering import extract_features
 import os
 
 # --- THÊM PHẦN ĐỊNH NGHĨA HÀM BUILD_FREQS ---
@@ -74,7 +74,7 @@ freqs = build_freqs(train_x, train_y)
 print("Extracting features...")
 X = np.zeros((len(train_x), 7))
 for i in range(len(train_x)):
-    X[i, :]= extract_features_6(train_x[i], freqs)
+    X[i, :]= extract_features(train_x[i], freqs)
 
 Y = train_y
 
