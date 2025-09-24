@@ -1,51 +1,43 @@
 import numpy as np
-import math
-from .utils import process_tweet
-
-FIRST_SECOND_PRONOUNS = {
-    "i", "me", "my", "mine", "we", "us", "our", "ours",
-    "you", "your", "yours", "u", "ya"
-}
+import re
+import string
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+from nltk.tokenize import TweetTokenizer
+from .utils import process_tweet # Giả sử utils.py cùng thư mục
 
 def extract_features_6(tweet, freqs):
-    """
-    Input:
-        tweet: a string containing a tweet
-        freqs: a dictionary mapping (word, sentiment) to frequency
-    Output:
-        x: a feature vector of dimension (1, 7)
-    """
-    # process_tweet tokenizes, stems, and removes stopwords
+    # process_tweet để lấy pos/neg frequencies
     word_l = process_tweet(tweet)
-    wc = len(word_l)
+    x = np.zeros(7)
+    
+    # Feature 0: Bias
+    x[0] = 1
 
-    # 1 x 7 vector
-    x = np.zeros((1, 7))
-
-    # bias term is set to 1
-    x[0,0] = 1
-
-    # x1: count(positive lexicon words in doc)
-    # x2: count(negative lexicon words in doc)
-    pos_sum = 0.0
-    neg_sum = 0.0
+    # Feature 1 & 2: Positive và Negative Frequencies
     for word in word_l:
-        pos_sum += freqs.get((word, 1.0), 0)
-        neg_sum += freqs.get((word, 0.0), 0)
-    x[0,1] = pos_sum
-    x[0,2] = neg_sum
+        x[1] += freqs.get((word, 1.0), 0)
+        x[2] += freqs.get((word, 0.0), 0)
 
-    # x3: 1 if "no" appears, else 0
-    x[0,3] = 1.0 if "no" in word_l else 0.0
+    # Tokenize tweet gốc để tính các feature khác
+    tokenizer = TweetTokenizer(preserve_case=False, strip_handles=True, reduce_len=True)
+    tweet_tokens = tokenizer.tokenize(tweet)
 
-    # x4: count of 1st & 2nd person pronouns
-    x[0,4] = sum(1 for w in word_l if w in FIRST_SECOND_PRONOUNS)
+    # Feature 3: 'no' count (tính trên tweet gốc)
+    x[3] = tweet_tokens.count('no')
 
-    # x5: 1 if "!" appears, else 0
-    x[0,5] = 1.0 if ("!" in (tweet or "")) else 0.0
+    # Feature 4: Pronoun count (tính trên tweet gốc)
+    pronouns = ["i", "me", "my", "mine", "we", "us", "our", "ours", "you", "your", "yours", 
+                "he", "him", "his", "she", "her", "hers", "it", "its", "they", "them", "their", "theirs"]
+    x[4] = sum(1 for word in tweet_tokens if word in pronouns)
 
-    # x6: log(word_count) of the document
-    x[0,6] = math.log(max(1, wc))
+    # Feature 5: '!' count (tính trên tweet gốc)
+    x[5] = tweet.count('!')
 
-    assert(x.shape == (1, 7))
+    # Feature 6: Log word count (tính trên tweet gốc)
+    word_count = len(tweet.split())
+    x[6] = np.log(word_count) if word_count > 0 else 0
+
+    x = x.reshape(1, -1)
+    
     return x
