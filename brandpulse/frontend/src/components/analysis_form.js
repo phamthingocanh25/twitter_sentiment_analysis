@@ -1,7 +1,8 @@
 import React from 'react';
 
 // SỬA LỖI: Thêm "setTweet" vào danh sách props để component có thể nhận và sử dụng nó.
-function AnalysisForm({ tweet, setTweet, onSubmit, isLoading }) {
+// TỐI ƯU: Bọc component trong React.memo
+const AnalysisForm = React.memo(({ tweet, setTweet, onSubmit, isLoading }) => {
   return (
     <div className="panel analysis-form-panel">
       <h2 className="panel-title">Phân tích Tweet</h2>
@@ -18,6 +19,6 @@ function AnalysisForm({ tweet, setTweet, onSubmit, isLoading }) {
       </form>
     </div>
   );
-}
+});
 
 export default AnalysisForm;

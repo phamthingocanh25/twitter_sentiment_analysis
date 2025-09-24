@@ -1,6 +1,7 @@
 import React from 'react';
 
-const MetricsPanel = ({ history }) => {
+// TỐI ƯU: Bọc component trong React.memo
+const MetricsPanel = React.memo(({ history }) => {
   const positiveCount = history.filter(item => item.result.sentiment === 'Tích cực').length;
   const negativeCount = history.filter(item => item.result.sentiment === 'Tiêu cực').length;
 
@@ -19,6 +20,6 @@ const MetricsPanel = ({ history }) => {
       </div>
     </div>
   );
-};
+});
 
 export default MetricsPanel;

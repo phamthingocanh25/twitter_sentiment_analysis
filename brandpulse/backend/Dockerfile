@@ -21,4 +21,4 @@ COPY . .
 EXPOSE 5000
 
 # Lệnh để chạy ứng dụng khi container khởi động
-CMD ["python", "app.py"]
+CMD ["gunicorn", "--workers=4", "--bind", "0.0.0.0:5000", "app:app"]

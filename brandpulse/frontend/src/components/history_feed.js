@@ -1,6 +1,7 @@
 import React from 'react';
 
-const HistoryFeed = ({ history }) => {
+// TỐI ƯU: Bọc component trong React.memo
+const HistoryFeed = React.memo(({ history }) => {
   return (
     <div className="panel history-feed-panel">
       <h2 className="panel-title">Lịch sử Phân tích</h2>
@@ -25,6 +26,6 @@ const HistoryFeed = ({ history }) => {
       </div>
     </div>
   );
-};
+});
 
 export default HistoryFeed;

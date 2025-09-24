@@ -22,9 +22,6 @@ FROM nginx:1.21-alpine
 # Sao chép kết quả build từ stage 1 vào thư mục public của Nginx
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Sao chép file cấu hình Nginx (nếu có, không bắt buộc cho app đơn giản)
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
-
 # Mở cổng 80
 EXPOSE 80
 

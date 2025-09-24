@@ -1,7 +1,8 @@
 import React from 'react';
 import { RadialBarChart, RadialBar, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 
-const ResultGauge = ({ result }) => {
+// TỐI ƯU: Bọc toàn bộ component trong React.memo
+const ResultGauge = React.memo(({ result }) => {
   if (!result) {
     return (
       <div className="panel result-gauge-panel">
@@ -16,7 +17,11 @@ const ResultGauge = ({ result }) => {
   const isPositive = result.sentiment === 'Tích cực';
   const confidence = Math.round(result.confidence * 100);
   const data = [{ name: 'Confidence', value: confidence }];
-  const color = isPositive ? '#03dac6' : '#cf6679';
+
+  // Cải tiến: Tự động lấy màu từ file CSS để đồng bộ
+  const positiveColor = getComputedStyle(document.documentElement).getPropertyValue('--positive-color').trim();
+  const negativeColor = getComputedStyle(document.documentElement).getPropertyValue('--negative-color').trim();
+  const barColor = isPositive ? positiveColor : negativeColor;
 
   return (
     <div className="panel result-gauge-panel">
@@ -41,16 +46,16 @@ const ResultGauge = ({ result }) => {
             clockWise
             dataKey="value"
             cornerRadius={15}
-            fill={color}
+            // Đã cập nhật để dùng màu từ CSS
+            fill={barColor}
           />
+          {/* 👇 Khối mã này giữ nguyên để đảm bảo kiểu dáng và font chữ không đổi */}
           <text
             x="50%"
             y="55%"
             textAnchor="middle"
             dominantBaseline="middle"
-            className="progress-label"
-            fontSize="40"
-            fill="#e0e0e0"
+            className="gauge-percentage" 
           >
             {`${confidence}%`}
           </text>
@@ -61,6 +66,6 @@ const ResultGauge = ({ result }) => {
       </div>
     </div>
   );
-};
+});
 
 export default ResultGauge;

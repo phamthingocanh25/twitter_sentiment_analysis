@@ -1,60 +1,51 @@
-import math
 import numpy as np
+import math
 from .utils import process_tweet
 
-# Các đại từ ngôi thứ nhất và thứ hai
 FIRST_SECOND_PRONOUNS = {
     "i", "me", "my", "mine", "we", "us", "our", "ours",
     "you", "your", "yours", "u", "ya"
 }
 
-def extract_features(tweet, freqs):
+def extract_features_6(tweet, freqs):
     """
-    Trích xuất 6 đặc trưng từ một tweet.
     Input:
-        tweet: chuỗi string thô của tweet
-        freqs: từ điển ánh xạ (từ, nhãn) -> tần suất
+        tweet: a string containing a tweet
+        freqs: a dictionary mapping (word, sentiment) to frequency
     Output:
-        x: vector đặc trưng (1, 7) bao gồm [bias, x1..x6]
+        x: a feature vector of dimension (1, 7)
     """
-    # Kiểm tra dấu '!' trên tweet thô
-    has_exclaim = "!" in (tweet or "")
-
-    # Xử lý token (stem, loại bỏ stopwords...)
+    # process_tweet tokenizes, stems, and removes stopwords
     word_l = process_tweet(tweet)
     wc = len(word_l)
 
-    # Khởi tạo vector [bias + 6 features]
+    # 1 x 7 vector
     x = np.zeros((1, 7))
-    x[0, 0] = 1.0  # bias
 
-    # x1, x2: tổng tần suất từ tích cực và tiêu cực
-    pos_sum, neg_sum = 0.0, 0.0
-    for w in word_l:
-        if (w, 1.0) in freqs:
-            pos_sum += freqs[(w, 1.0)]
-        if (w, 0.0) in freqs:
-            neg_sum += freqs[(w, 0.0)]
+    # bias term is set to 1
+    x[0,0] = 1
 
-    # x3: có từ "no"?
-    has_no = 1.0 if "no" in word_l else 0.0
+    # x1: count(positive lexicon words in doc)
+    # x2: count(negative lexicon words in doc)
+    pos_sum = 0.0
+    neg_sum = 0.0
+    for word in word_l:
+        pos_sum += freqs.get((word, 1.0), 0)
+        neg_sum += freqs.get((word, 0.0), 0)
+    x[0,1] = pos_sum
+    x[0,2] = neg_sum
 
-    # x4: đếm đại từ ngôi 1 & 2
-    pron_count = sum(1 for w in word_l if w in FIRST_SECOND_PRONOUNS)
+    # x3: 1 if "no" appears, else 0
+    x[0,3] = 1.0 if "no" in word_l else 0.0
 
-    # x5: có dấu '!' trong tweet thô?
-    exclaim = 1.0 if has_exclaim else 0.0
+    # x4: count of 1st & 2nd person pronouns
+    x[0,4] = sum(1 for w in word_l if w in FIRST_SECOND_PRONOUNS)
 
-    # x6: ln(word_count)
-    ln_wc = math.log(max(1, wc))
+    # x5: 1 if "!" appears, else 0
+    x[0,5] = 1.0 if ("!" in (tweet or "")) else 0.0
 
-    # Gán vào vector
-    x[0, 1] = pos_sum
-    x[0, 2] = neg_sum
-    x[0, 3] = has_no
-    x[0, 4] = pron_count
-    x[0, 5] = exclaim
-    x[0, 6] = ln_wc
+    # x6: log(word_count) of the document
+    x[0,6] = math.log(max(1, wc))
 
-    assert x.shape == (1, 7)
+    assert(x.shape == (1, 7))
     return x
