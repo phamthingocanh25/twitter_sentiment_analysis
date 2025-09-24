@@ -7,7 +7,8 @@ const ResultGauge = React.lazy(() => import('./components/result_gauge'));
 const HistoryFeed = React.lazy(() => import('./components/history_feed'));
 const MetricsPanel = React.lazy(() => import('./components/metric_panel'));
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/predict';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/analyze';
+<strong>2. Không nhất quán về khóa dữ liệu (Data Key Mismatch)</strong>
 
 function Dashboard() {
   const [tweet, setTweet] = useState('');

@@ -18,12 +18,12 @@ with open('model/w6.pkl', 'rb') as f:
 @app.route('/analyze', methods=['POST'])
 def analyze():
     data = request.json
-    tweet_text = data.get('brand') # Vẫn dùng key 'brand' từ frontend
+    # SỬA LỖI 1: Nhận đúng key 'tweet' từ frontend
+    tweet_text = data.get('tweet') 
 
     if not tweet_text:
         return jsonify({"error": "No text provided"}), 400
 
-    # Thực hiện dự đoán bằng hàm đã import
     prob_positive_raw = predict_single_tweet(tweet_text, freqs, w6)
     prob_positive = prob_positive_raw[0][0]
     prob_negative = 1 - prob_positive
@@ -31,8 +31,9 @@ def analyze():
     sentiment = "Positive" if prob_positive > 0.5 else "Negative"
 
     response_data = {
-        "positive_percentage": round(prob_positive * 100, 2),
-        "negative_percentage": round(prob_negative * 100, 2),
+        # SỬA LỖI 2: Chuyển đổi kiểu dữ liệu sang float
+        "positive_percentage": round(float(prob_positive) * 100, 2),
+        "negative_percentage": round(float(prob_negative) * 100, 2),
         "neutral_percentage": 0,
         "tweets": [
             {
@@ -43,6 +44,5 @@ def analyze():
     }
 
     return jsonify(response_data)
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
