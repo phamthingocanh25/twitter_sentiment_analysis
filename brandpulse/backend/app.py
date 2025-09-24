@@ -44,17 +44,14 @@ def predict():
         
     prediction = predict_tweet(tweet)
     
-    # Kiểm tra nếu kết quả là NaN
-    if np.isnan(prediction):
-        return jsonify({
-            'sentiment': 'Error',
-            'probability': 'NaN'
-        })
-        
-    sentiment = 'Positive' if prediction > 0.5 else 'Negative'
+    # Đổi tên 'confidence' thành 'probability' để khớp với frontend
+    # Sửa lỗi logic hiển thị: nếu prediction > 0.5 là 'Tích cực', ngược lại là 'Tiêu cực'
+    sentiment = 'Tích cực' if prediction > 0.5 else 'Tiêu cực'
+    
+    # Trả về cả 'sentiment' và 'probability'
     return jsonify({
         'sentiment': sentiment,
-        'probability': float(prediction)
+        'probability': float(prediction) # Đổi tên key ở đây
     })
 
 if __name__ == '__main__':

@@ -15,7 +15,7 @@ const ResultGauge = React.memo(({ result }) => {
   }
 
   const isPositive = result.sentiment === 'Tích cực';
-  const confidence = Math.round(result.confidence * 100);
+  const confidence = Math.round(result.probability * 100);
   const data = [{ name: 'Confidence', value: confidence }];
 
   // Cải tiến: Tự động lấy màu từ file CSS để đồng bộ

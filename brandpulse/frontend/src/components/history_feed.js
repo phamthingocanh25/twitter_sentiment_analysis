@@ -19,7 +19,7 @@ const HistoryFeed = React.memo(({ history }) => {
               }`}
             >
               <p>"{item.tweet}"</p>
-              <span>{`Độ tin cậy: ${(item.result.confidence * 100).toFixed(1)}%`}</span>
+              <span>{`Độ tin cậy: ${(item.result.probability * 100).toFixed(1)}%`}</span>
             </div>
           ))
         )}
