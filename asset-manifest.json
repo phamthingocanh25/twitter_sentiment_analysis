@@ -1,0 +1,28 @@
+{
+  "files": {
+    "main.css": "/twitter_sentiment_analysis/static/css/main.1ec53812.css",
+    "main.js": "/twitter_sentiment_analysis/static/js/main.9d0f41b9.js",
+    "static/js/260.b0c4ccad.chunk.js": "/twitter_sentiment_analysis/static/js/260.b0c4ccad.chunk.js",
+    "static/js/411.d97f9022.chunk.js": "/twitter_sentiment_analysis/static/js/411.d97f9022.chunk.js",
+    "static/js/673.ef44a03a.chunk.js": "/twitter_sentiment_analysis/static/js/673.ef44a03a.chunk.js",
+    "static/js/612.09488e7b.chunk.js": "/twitter_sentiment_analysis/static/js/612.09488e7b.chunk.js",
+    "static/js/231.e42089ea.chunk.js": "/twitter_sentiment_analysis/static/js/231.e42089ea.chunk.js",
+    "static/js/472.c0ed8818.chunk.js": "/twitter_sentiment_analysis/static/js/472.c0ed8818.chunk.js",
+    "static/js/722.2df410e4.chunk.js": "/twitter_sentiment_analysis/static/js/722.2df410e4.chunk.js",
+    "static/media/background.gif": "/twitter_sentiment_analysis/static/media/background.c20dad38ba266ee3ef98.gif",
+    "index.html": "/twitter_sentiment_analysis/index.html",
+    "main.1ec53812.css.map": "/twitter_sentiment_analysis/static/css/main.1ec53812.css.map",
+    "main.9d0f41b9.js.map": "/twitter_sentiment_analysis/static/js/main.9d0f41b9.js.map",
+    "260.b0c4ccad.chunk.js.map": "/twitter_sentiment_analysis/static/js/260.b0c4ccad.chunk.js.map",
+    "411.d97f9022.chunk.js.map": "/twitter_sentiment_analysis/static/js/411.d97f9022.chunk.js.map",
+    "673.ef44a03a.chunk.js.map": "/twitter_sentiment_analysis/static/js/673.ef44a03a.chunk.js.map",
+    "612.09488e7b.chunk.js.map": "/twitter_sentiment_analysis/static/js/612.09488e7b.chunk.js.map",
+    "231.e42089ea.chunk.js.map": "/twitter_sentiment_analysis/static/js/231.e42089ea.chunk.js.map",
+    "472.c0ed8818.chunk.js.map": "/twitter_sentiment_analysis/static/js/472.c0ed8818.chunk.js.map",
+    "722.2df410e4.chunk.js.map": "/twitter_sentiment_analysis/static/js/722.2df410e4.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.1ec53812.css",
+    "static/js/main.9d0f41b9.js"
+  ]
+}
