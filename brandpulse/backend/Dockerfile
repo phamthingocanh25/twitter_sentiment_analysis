@@ -10,4 +10,4 @@ RUN python -c "import nltk; nltk.download('stopwords'); nltk.download('twitter_s
 
 COPY . .
 
-CMD ["python", "app.py"]
+CMD ["gunicorn", "--workers", "4", "--bind", "0.0.0.0:10000", "app:app"]
